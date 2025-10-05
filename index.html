@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Twitter Cookie Manager - Secure Cookie Storage & Management</title>
+    <style>
+      :root {
+        /* Color Palette */
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --tertiary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+
+        /* Typography */
+        --font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        --font-size-base: 16px;
+        --font-size-small: 14px;
+        --font-size-xs: 12px;
+
+        /* Spacing */
+        --spacing-xs: 5px;
+        --spacing-sm: 10px;
+        --spacing-md: 15px;
+        --spacing-lg: 20px;
+        --spacing-xl: 25px;
+        --spacing-xxl: 40px;
+
+        /* Borders & Shadows */
+        --border-radius: 10px;
+        --border-radius-sm: 6px;
+        --border-radius-lg: 20px;
+        --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        --box-shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.1);
+
+        /* Touch Targets */
+        --touch-target: 48px;
+
+        /* Z-index Scale */
+        --z-stats: 1000;
+        --z-stats-mobile: 1001;
+        --z-stats-small: 1002;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: var(--font-family);
+        background: var(--primary-gradient);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-lg);
+        font-size: var(--font-size-base);
+        line-height: 1.6;
+      }
+
+      .container {
+        background: var(--primary-gradient);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--box-shadow-lg);
+        overflow: hidden;
+        width: 100%;
+        max-width: 1400px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        min-height: 600px;
+        will-change: transform;
+      }
+
+      .header {
+        grid-column: 1 / -1;
+        background: var(--primary-gradient);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .form-section {
+        padding: var(--spacing-xxl);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        color: white;
+        position: relative;
+      }
+
+      .form-section:nth-child(2) {
+        background: var(--primary-gradient);
+      }
+      .form-section:nth-child(3) {
+        background: var(--secondary-gradient);
+      }
+      .form-section:nth-child(4) {
+        background: var(--tertiary-gradient);
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: var(--spacing-sm);
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        font-weight: 700;
+        color: #333;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-section h1 {
+        color: white;
+        font-size: clamp(1.2rem, 3vw, 1.8rem);
+        margin-bottom: var(--spacing-lg);
+      }
+
+      .subtitle {
+        text-align: center;
+        margin-bottom: var(--spacing-xxl);
+        color: #666;
+        font-size: clamp(0.9rem, 2vw, 1.1rem);
+      }
+
+      .form-section .subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: clamp(0.8rem, 2vw, 1rem);
+        margin-bottom: 30px;
+      }
+
+      .form-group {
+        margin-bottom: var(--spacing-xl);
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: var(--font-size-small);
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: var(--spacing-md);
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: var(--font-size-base);
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        min-height: var(--touch-target);
+        font-family: inherit;
+      }
+
+      input:focus,
+      textarea:focus {
+        outline: 2px solid rgba(255, 255, 255, 0.8);
+        outline-offset: 2px;
+        background: white;
+        transform: translateY(-1px);
+        box-shadow: var(--box-shadow);
+      }
+
+      input:invalid {
+        border: 2px solid rgba(244, 67, 54, 0.5);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 120px;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        line-height: 1.4;
+      }
+
+      .btn {
+        width: 100%;
+        padding: var(--spacing-md);
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: var(--font-size-base);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        min-height: var(--touch-target);
+        font-family: inherit;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn:focus {
+        outline: 2px solid rgba(255, 255, 255, 0.8);
+        outline-offset: 2px;
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-primary {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+        box-shadow: var(--box-shadow);
+      }
+
+      .btn-primary:active {
+        transform: translateY(0);
+      }
+
+      .result {
+        margin-top: var(--spacing-lg);
+        padding: var(--spacing-md);
+        border-radius: var(--border-radius);
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: none;
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .result.success {
+        background: rgba(76, 175, 80, 0.2);
+        border-color: rgba(76, 175, 80, 0.4);
+        color: #4caf50;
+      }
+
+      .result.error {
+        background: rgba(244, 67, 54, 0.2);
+        border-color: rgba(244, 67, 54, 0.4);
+        color: #f44336;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin-top: var(--spacing-lg);
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      .spinner {
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 3px solid white;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto var(--spacing-sm);
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .cookie-preview {
+        margin-top: var(--spacing-md);
+        max-height: 200px;
+        overflow-y: auto;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: var(--border-radius-sm);
+        padding: var(--spacing-sm);
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: var(--font-size-xs);
+        line-height: 1.4;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .stats {
+        position: fixed;
+        top: var(--spacing-lg);
+        right: var(--spacing-lg);
+        background: rgba(255, 255, 255, 0.95);
+        padding: var(--spacing-md);
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        min-width: 200px;
+        z-index: var(--z-stats);
+        max-width: 250px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .stats h3 {
+        color: #333;
+        margin-bottom: var(--spacing-sm);
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .stats-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-sm);
+      }
+
+      .stats-toggle {
+        background: none;
+        border: none;
+        font-size: var(--font-size-base);
+        cursor: pointer;
+        padding: var(--spacing-xs);
+        border-radius: var(--spacing-xs);
+        transition: background-color 0.3s ease;
+        display: none;
+      }
+
+      .stats-toggle:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+
+      .stats-toggle:focus {
+        outline: 2px solid rgba(0, 0, 0, 0.3);
+        outline-offset: 1px;
+      }
+
+      .stats-content {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .stats-content.hidden {
+        display: none;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: var(--spacing-xs);
+        color: #666;
+        font-size: var(--font-size-small);
+      }
+
+      .stat-item:last-child {
+        margin-bottom: 0;
+      }
+
+      /* Responsive Design - Mobile First Approach */
+      @media (max-width: 1200px) {
+        .container {
+          grid-template-columns: repeat(2, 1fr);
+          max-width: 900px;
+        }
+
+        .form-section:nth-child(4) {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: var(--spacing-sm);
+          align-items: flex-start;
+          padding-top: 80px;
+        }
+
+        .container {
+          grid-template-columns: 1fr;
+          max-width: 100%;
+          border-radius: var(--spacing-md);
+          min-height: auto;
+        }
+
+        .header {
+          padding: var(--spacing-lg);
+        }
+
+        .form-section {
+          padding: var(--spacing-xl) var(--spacing-lg);
+          min-height: auto;
+        }
+
+        textarea {
+          min-height: 100px;
+          font-size: var(--font-size-small);
+          padding: var(--spacing-xs);
+        }
+
+        input {
+          font-size: var(--font-size-base);
+          padding: var(--spacing-xs);
+          min-height: var(--touch-target);
+        }
+
+        .btn {
+          padding: var(--spacing-xs);
+          font-size: var(--font-size-small);
+          min-height: var(--touch-target);
+        }
+
+        .stats {
+          position: fixed;
+          top: var(--spacing-sm);
+          right: var(--spacing-sm);
+          left: var(--spacing-sm);
+          margin: 0;
+          width: auto;
+          max-width: none;
+          padding: var(--spacing-xs);
+          font-size: var(--font-size-small);
+          z-index: var(--z-stats-mobile);
+          background: rgba(255, 255, 255, 0.98);
+          backdrop-filter: blur(15px);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-toggle {
+          display: inline-block !important;
+          font-size: var(--font-size-small);
+          padding: 4px 8px;
+          background: rgba(0, 0, 0, 0.1);
+          border-radius: var(--border-radius-sm);
+          border: none;
+        }
+
+        .stats-header {
+          margin-bottom: 8px;
+        }
+
+        .stats h3 {
+          font-size: 1rem;
+          margin-bottom: 0;
+        }
+
+        .stat-item {
+          font-size: var(--font-size-xs);
+          margin-bottom: 4px;
+        }
+
+        .form-group {
+          margin-bottom: var(--spacing-lg);
+        }
+
+        .result {
+          padding: var(--spacing-xs);
+          font-size: var(--font-size-small);
+        }
+
+        .cookie-preview {
+          font-size: 11px;
+          max-height: 150px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: var(--spacing-xs);
+          padding-top: 70px;
+        }
+
+        .container {
+          border-radius: var(--spacing-sm);
+        }
+
+        .form-section {
+          padding: var(--spacing-lg) var(--spacing-md);
+        }
+
+        .header {
+          padding: var(--spacing-md) var(--spacing-sm);
+        }
+
+        textarea,
+        input {
+          font-size: var(--font-size-small);
+          padding: var(--spacing-sm);
+        }
+
+        .btn {
+          padding: var(--spacing-sm);
+          font-size: 13px;
+        }
+
+        .stats {
+          position: fixed;
+          top: var(--spacing-xs);
+          right: var(--spacing-xs);
+          left: var(--spacing-xs);
+          padding: 8px var(--spacing-sm);
+          margin: 0;
+          font-size: var(--font-size-xs);
+          z-index: var(--z-stats-small);
+          background: rgba(255, 255, 255, 0.98);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
+        }
+
+        .stats-header {
+          margin-bottom: 6px;
+        }
+
+        .stats h3 {
+          font-size: 0.85rem;
+          margin-bottom: 0;
+        }
+
+        .stats-toggle {
+          font-size: var(--font-size-xs);
+          padding: 3px 6px;
+        }
+
+        .stat-item {
+          font-size: 10px;
+          margin-bottom: 2px;
+        }
+
+        .form-group div {
+          margin-bottom: 8px;
+        }
+      }
+
+      /* Accessibility improvements */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .stats {
+          background: rgba(30, 30, 30, 0.95);
+          color: #fff;
+        }
+
+        .stats h3 {
+          color: #fff;
+        }
+
+        .stat-item {
+          color: #ccc;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading indicator for initial page load -->
+    <div
+      id="loadingIndicator"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(102, 126, 234, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: white;
+        font-size: 1.2rem;
+      "
+    >
+      <div>
+        <div class="spinner" style="margin: 0 auto 20px"></div>
+        <p>Loading Cookie Manager...</p>
+      </div>
+    </div>
+
+    <main class="container" role="main">
+      <header class="header">
+        <h1>🍪 Twitter Cookie Manager</h1>
+        <p class="subtitle">Securely store and manage your Twitter cookies</p>
+      </header>
+
+      <!-- Section 1: Check User Existence -->
+      <section class="form-section" aria-labelledby="check-user-title">
+        <h1 id="check-user-title">🔍 Check User</h1>
+        <p class="subtitle">Check if username exists in database</p>
+
+        <form id="checkUserForm" novalidate>
+          <div class="form-group">
+            <label for="checkUsernameInput">Username to Check:</label>
+            <input
+              type="text"
+              id="checkUsernameInput"
+              name="username"
+              placeholder="Enter username to check"
+              required
+              minlength="3"
+              maxlength="50"
+              autocomplete="username"
+              aria-describedby="check-username-help"
+            />
+            <small
+              id="check-username-help"
+              style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem"
+              >Username must be 3-50 characters</small
+            >
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            aria-describedby="check-loading"
+          >
+            <span>Check User</span>
+          </button>
+
+          <div
+            class="loading"
+            id="checkLoading"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="spinner" aria-hidden="true"></div>
+            <p>Checking user...</p>
+          </div>
+
+          <div
+            class="result"
+            id="checkResult"
+            role="alert"
+            aria-live="assertive"
+          ></div>
+        </form>
+      </section>
+
+      <!-- Section 2: Store Cookies with Username -->
+      <section class="form-section" aria-labelledby="store-cookies-title">
+        <h1 id="store-cookies-title">💾 Store User Cookies</h1>
+        <p class="subtitle">Save cookies to database with username</p>
+
+        <form id="storeForm" novalidate>
+          <div class="form-group">
+            <label for="usernameInput">Username:</label>
+            <input
+              type="text"
+              id="usernameInput"
+              name="username"
+              placeholder="Enter username"
+              required
+              minlength="3"
+              maxlength="50"
+              autocomplete="username"
+              aria-describedby="username-help"
+            />
+            <small
+              id="username-help"
+              style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem"
+              >Username must be 3-50 characters</small
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="cookieStoreInput">Cookie Data:</label>
+            <textarea
+              id="cookieStoreInput"
+              name="cookieData"
+              placeholder='Paste your cookie JSON array or cookie string here...&#10;&#10;JSON Format: [{"name": "cookie_name", "value": "cookie_value", ...}, ...]&#10;&#10;Cookie String Format: name1=value1; name2=value2; name3=value3'
+              required
+              minlength="10"
+              aria-describedby="cookie-store-help"
+            ></textarea>
+            <small
+              id="cookie-store-help"
+              style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem"
+              >Supports JSON arrays or cookie strings</small
+            >
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            aria-describedby="store-loading"
+          >
+            <span>Store Cookies</span>
+          </button>
+
+          <div
+            class="loading"
+            id="storeLoading"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="spinner" aria-hidden="true"></div>
+            <p>Storing cookies...</p>
+          </div>
+
+          <div
+            class="result"
+            id="storeResult"
+            role="alert"
+            aria-live="assertive"
+          ></div>
+        </form>
+      </section>
+
+      <!-- Section 3: Upload and Extract Cookies -->
+      <!-- <section class="form-section" aria-labelledby="extract-cookies-title">
+        <h1 id="extract-cookies-title">📤 Extract Cookie Data</h1>
+        <p class="subtitle">
+          Upload cookie JSON to extract name and value pairs
+        </p>
+
+        <form id="extractForm" novalidate>
+          <div class="form-group">
+            <label for="cookieInput">Cookie Data:</label>
+            <textarea
+              id="cookieInput"
+              name="cookieData"
+              placeholder='Paste your cookie JSON array or cookie string here...&#10;&#10;JSON Format: [{"name": "cookie_name", "value": "cookie_value", ...}, ...]&#10;&#10;Cookie String Format: name1=value1; name2=value2; name3=value3'
+              required
+              minlength="10"
+              aria-describedby="cookie-input-help"
+            ></textarea>
+            <small
+              id="cookie-input-help"
+              style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem"
+              >Supports JSON arrays or cookie strings</small
+            >
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            aria-describedby="extract-loading"
+          >
+            <span>Extract Cookie Data</span>
+          </button>
+
+          <div
+            class="loading"
+            id="extractLoading"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="spinner" aria-hidden="true"></div>
+            <p>Processing cookies...</p>
+          </div>
+
+          <div
+            class="result"
+            id="extractResult"
+            role="alert"
+            aria-live="assertive"
+          ></div>
+          <div
+            class="cookie-preview"
+            id="cookiePreview"
+            aria-label="Cookie preview"
+          ></div>
+        </form>
+      </section> -->
+    </main>
+
+    <aside
+      class="stats"
+      id="stats"
+      role="complementary"
+      aria-label="Statistics"
+    >
+      <div class="stats-header">
+        <h3>📊 Statistics</h3>
+        <button
+          class="stats-toggle"
+          id="statsToggle"
+          aria-label="Toggle statistics visibility"
+          aria-expanded="true"
+        >
+          📱
+        </button>
+      </div>
+      <div class="stats-content" id="statsContent">
+        <div class="stat-item">
+          <span>Total Users cookies:</span>
+          <span id="totalUsers" aria-live="polite">-</span>
+        </div>
+        <div class="stat-item">
+          <span>Last Updated:</span>
+          <span id="lastUpdated" aria-live="polite">-</span>
+        </div>
+      </div>
+    </aside>
+
+    <script>
+      // Configuration and constants
+      const CONFIG = {
+        API_BASE: "/api",
+        STATS_REFRESH_INTERVAL: 30000,
+        DEBOUNCE_DELAY: 300,
+        MAX_RETRIES: 3,
+        MOBILE_BREAKPOINT: 768,
+      };
+
+      // Utility functions
+      const utils = {
+        debounce(func, wait) {
+          let timeout;
+          return function executedFunction(...args) {
+            const later = () => {
+              clearTimeout(timeout);
+              func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+          };
+        },
+
+        async fetchWithRetry(url, options = {}, retries = CONFIG.MAX_RETRIES) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+            const response = await fetch(url, {
+              ...options,
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+            return response;
+          } catch (error) {
+            if (retries > 0 && error.name !== "AbortError") {
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+              return this.fetchWithRetry(url, options, retries - 1);
+            }
+            throw error;
+          }
+        },
+
+        validateInput(value, type = "text", min = 0, max = Infinity) {
+          if (
+            !value ||
+            value.trim().length < min ||
+            value.trim().length > max
+          ) {
+            return false;
+          }
+          return true;
+        },
+
+        sanitizeInput(input) {
+          return input.trim().replace(/[<>"'&]/g, (char) => {
+            const entities = {
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+              "&": "&amp;",
+            };
+            return entities[char] || char;
+          });
+        },
+
+        showLoading(elementId, show = true) {
+          const element = document.getElementById(elementId);
+          if (element) {
+            element.style.display = show ? "block" : "none";
+            // Disable form buttons during loading
+            const form = element.closest("form");
+            if (form) {
+              const submitBtn = form.querySelector('button[type="submit"]');
+              if (submitBtn) {
+                submitBtn.disabled = show;
+              }
+            }
+          }
+        },
+
+        showResult(elementId, content, type = "success") {
+          const element = document.getElementById(elementId);
+          if (element) {
+            element.className = `result ${type}`;
+            element.innerHTML = content;
+            element.style.display = "block";
+
+            // Auto-hide error messages after 10 seconds
+            if (type === "error") {
+              setTimeout(() => {
+                element.style.display = "none";
+              }, 10000);
+            }
+          }
+        },
+      };
+
+      // Application state
+      const state = {
+        isLoading: false,
+        lastStatsUpdate: null,
+        retryCount: 0,
+      };
+
+      // Initialize application
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM Content Loaded - Starting initialization");
+        
+        // Hide loading indicator immediately
+        const loadingIndicator = document.getElementById("loadingIndicator");
+        if (loadingIndicator) {
+          console.log("Removing loading indicator");
+          loadingIndicator.style.opacity = "0";
+          loadingIndicator.style.transition = "opacity 0.3s ease";
+          setTimeout(() => {
+            loadingIndicator.remove();
+            console.log("Loading indicator removed");
+          }, 300);
+        } else {
+          console.log("Loading indicator not found");
+        }
+
+        // Initialize components
+        initializeEventListeners();
+        initMobileStats();
+        loadStats();
+
+        // Set up periodic stats refresh
+        setInterval(loadStats, CONFIG.STATS_REFRESH_INTERVAL);
+
+        // Add keyboard navigation
+        initKeyboardNavigation();
+
+        console.log("Cookie Manager initialized successfully");
+      });
+
+      // Event listeners setup
+      function initializeEventListeners() {
+        // Form submissions
+        document
+          .getElementById("storeForm")
+          .addEventListener("submit", handleStoreSubmit);
+        document
+          .getElementById("checkUserForm")
+          .addEventListener("submit", handleCheckUserSubmit);
+
+        // Stats toggle button
+        const statsToggle = document.getElementById("statsToggle");
+        if (statsToggle) {
+          statsToggle.addEventListener("click", toggleStats);
+        }
+
+        // Window resize handler
+        window.addEventListener(
+          "resize",
+          utils.debounce(handleWindowResize, CONFIG.DEBOUNCE_DELAY)
+        );
+
+        // Visibility change handler for stats refresh
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+      }
+
+      // Keyboard navigation
+      function initKeyboardNavigation() {
+        document.addEventListener("keydown", (e) => {
+          // ESC key to close results
+          if (e.key === "Escape") {
+            const results = document.querySelectorAll(
+              '.result[style*="block"]'
+            );
+            results.forEach((result) => (result.style.display = "none"));
+          }
+
+          // Ctrl/Cmd + Enter to submit active form
+          if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            const activeElement = document.activeElement;
+            const form = activeElement.closest("form");
+            if (form) {
+              e.preventDefault();
+              form.dispatchEvent(new Event("submit"));
+            }
+          }
+        });
+      }
+
+      // Form handlers
+      async function handleExtractSubmit(e) {
+        e.preventDefault();
+
+        const cookieInput = document.getElementById("cookieInput");
+        const cookieData = cookieInput.value.trim();
+
+        // Validation
+        if (!utils.validateInput(cookieData, "text", 10, 50000)) {
+          utils.showResult(
+            "extractResult",
+            "<h4>❌ Validation Error</h4><p>Cookie data must be between 10 and 50,000 characters</p>",
+            "error"
+          );
+          return;
+        }
+
+        utils.showLoading("extractLoading", true);
+        utils.showResult("extractResult", "", "success");
+        document.getElementById("cookiePreview").innerHTML = "";
+
+        try {
+          let requestData;
+
+          // Determine input format
+          const trimmedData = cookieData.trim();
+          if (trimmedData.startsWith("[") || trimmedData.startsWith("{")) {
+            try {
+              requestData = { cookieData: JSON.parse(trimmedData) };
+            } catch (parseError) {
+              throw new Error(
+                "Invalid JSON format. Please check your JSON syntax."
+              );
+            }
+          } else {
+            requestData = { cookieData: trimmedData };
+          }
+
+          const response = await utils.fetchWithRetry(
+            `${CONFIG.API_BASE}/upload-cookie`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(requestData),
+            }
+          );
+
+          const data = await response.json();
+
+          if (response.ok) {
+            const successContent = `
+                        <h4>✅ Success!</h4>
+                        <p>${utils.sanitizeInput(data.message)}</p>
+                        <p><strong>Input Type:</strong> ${utils.sanitizeInput(
+                          data.inputType
+                        )}</p>
+                        <p><strong>Extracted ${data.count} cookies</strong></p>
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; font-weight: bold;">📄 Cookie String</summary>
+                            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; word-break: break-all; font-family: monospace; font-size: 12px; margin-top: 10px; max-height: 200px; overflow-y: auto;">
+                                ${utils.sanitizeInput(data.cookieString)}
+                            </div>
+                        </details>
+                    `;
+
+            utils.showResult("extractResult", successContent, "success");
+
+            // Show preview
+            const preview = document.getElementById("cookiePreview");
+            if (data.extractedCookies && data.extractedCookies.length > 0) {
+              const previewData = data.extractedCookies.slice(0, 3);
+              const moreCount =
+                data.extractedCookies.length > 3
+                  ? data.extractedCookies.length - 3
+                  : 0;
+
+              preview.innerHTML = `
+                            <h4>📋 Extracted Cookie Preview:</h4>
+                            <pre>${JSON.stringify(previewData, null, 2)}${
+                moreCount > 0 ? `\n... and ${moreCount} more` : ""
+              }</pre>
+                        `;
+            }
+          } else {
+            utils.showResult(
+              "extractResult",
+              `<h4>❌ Server Error</h4><p>${utils.sanitizeInput(
+                data.error || "Unknown error occurred"
+              )}</p>`,
+              "error"
+            );
+          }
+        } catch (error) {
+          console.error("Extract error:", error);
+          utils.showResult(
+            "extractResult",
+            `<h4>❌ Error</h4><p>${utils.sanitizeInput(
+              error.message || "Network error or invalid data format"
+            )}</p>`,
+            "error"
+          );
+        } finally {
+          utils.showLoading("extractLoading", false);
+        }
+      }
+
+      async function handleStoreSubmit(e) {
+        e.preventDefault();
+
+        const username = document.getElementById("usernameInput").value.trim();
+        const cookieData = document
+          .getElementById("cookieStoreInput")
+          .value.trim();
+
+        // Validation
+        if (!utils.validateInput(username, "text", 3, 50)) {
+          utils.showResult(
+            "storeResult",
+            "<h4>❌ Validation Error</h4><p>Username must be between 3 and 50 characters</p>",
+            "error"
+          );
+          return;
+        }
+
+        if (!utils.validateInput(cookieData, "text", 10, 50000)) {
+          utils.showResult(
+            "storeResult",
+            "<h4>❌ Validation Error</h4><p>Cookie data must be between 10 and 50,000 characters</p>",
+            "error"
+          );
+          return;
+        }
+
+        utils.showLoading("storeLoading", true);
+        utils.showResult("storeResult", "", "success");
+
+        try {
+          const response = await utils.fetchWithRetry(
+            `${CONFIG.API_BASE}/update-cookie`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                username: utils.sanitizeInput(username),
+                cookieData: cookieData,
+              }),
+            }
+          );
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            // API returns data nested under data.data
+            const responseData = data.data;
+            
+            const successContent = `
+                        <h4>✅ Success!</h4>
+                        <p>${utils.sanitizeInput(data.message)}</p>
+                        <p><strong>Input Type:</strong> ${utils.sanitizeInput(
+                          responseData.inputType
+                        )}</p>
+                        <p><strong>Stored ${
+                          responseData.cookieCount
+                        } cookies</strong></p>
+                        <p>Last updated: ${new Date(
+                          responseData.userData.lastUpdated
+                        ).toLocaleString()}</p>
+                        <details style="margin-top: 15px;">
+                            <summary style="cursor: pointer; font-weight: bold;">📄 Cookie String</summary>
+                            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; word-break: break-all; font-family: monospace; font-size: 11px; max-height: 100px; overflow-y: auto; margin-top: 10px;">
+                                ${utils.sanitizeInput(responseData.cookieString)}
+                            </div>
+                        </details>
+                    `;
+
+            utils.showResult("storeResult", successContent, "success");
+            loadStats(); // Refresh stats
+
+            // Clear form on success
+            document.getElementById("storeForm").reset();
+          } else {
+            utils.showResult(
+              "storeResult",
+              `<h4>❌ Server Error</h4><p>${utils.sanitizeInput(
+                data.error || "Unknown error occurred"
+              )}</p>`,
+              "error"
+            );
+          }
+        } catch (error) {
+          console.error("Store error:", error);
+          utils.showResult(
+            "storeResult",
+            `<h4>❌ Error</h4><p>${utils.sanitizeInput(
+              error.message || "Network error or server unavailable"
+            )}</p>`,
+            "error"
+          );
+        } finally {
+          utils.showLoading("storeLoading", false);
+        }
+      }
+
+      async function handleCheckUserSubmit(e) {
+        e.preventDefault();
+
+        const username = document
+          .getElementById("checkUsernameInput")
+          .value.trim();
+
+        // Validation
+        if (!utils.validateInput(username, "text", 3, 50)) {
+          utils.showResult(
+            "checkResult",
+            "<h4>❌ Validation Error</h4><p>Username must be between 3 and 50 characters</p>",
+            "error"
+          );
+          return;
+        }
+
+        utils.showLoading("checkLoading", true);
+        utils.showResult("checkResult", "", "success");
+
+        try {
+          const response = await utils.fetchWithRetry(
+            `${CONFIG.API_BASE}/check-user/${encodeURIComponent(username)}`
+          );
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            // API returns data nested under data.data
+            const responseData = data.data;
+            
+            if (responseData.exists) {
+              const successContent = `
+                            <h4>✅ User Found!</h4>
+                            <p>${utils.sanitizeInput(responseData.message)}</p>
+                            <details style="margin-top: 15px;">
+                                <summary style="cursor: pointer; font-weight: bold;">👤 User Information</summary>
+                                <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin-top: 10px;">
+                                    <p><strong>Username:</strong> ${utils.sanitizeInput(
+                                      responseData.userInfo.username
+                                    )}</p>
+                                    <p><strong>Cookie Count:</strong> ${
+                                      responseData.userInfo.cookieCount
+                                    }</p>
+                                    <p><strong>Created:</strong> ${new Date(
+                                      responseData.userInfo.createdAt
+                                    ).toLocaleString()}</p>
+                                    <p><strong>Last Updated:</strong> ${new Date(
+                                      responseData.userInfo.updatedAt
+                                    ).toLocaleString()}</p>
+                                </div>
+                            </details>
+                        `;
+              utils.showResult("checkResult", successContent, "success");
+            } else {
+              utils.showResult(
+                "checkResult",
+                `
+                            <h4>❌ User Not Found</h4>
+                            <p>${utils.sanitizeInput(responseData.message)}</p>
+                            <p style="margin-top: 10px;">💡 <em>This username is available for new cookie storage.</em></p>
+                        `,
+                "error"
+              );
+            }
+          } else {
+            utils.showResult(
+              "checkResult",
+              `<h4>❌ Server Error</h4><p>${utils.sanitizeInput(
+                data.error || "Unknown error occurred"
+              )}</p>`,
+              "error"
+            );
+          }
+        } catch (error) {
+          console.error("Check user error:", error);
+          utils.showResult(
+            "checkResult",
+            `<h4>❌ Error</h4><p>${utils.sanitizeInput(
+              error.message || "Network error or server unavailable"
+            )}</p>`,
+            "error"
+          );
+        } finally {
+          utils.showLoading("checkLoading", false);
+        }
+      }
+
+      // Statistics management
+      async function loadStats() {
+        if (state.isLoading) return;
+
+        state.isLoading = true;
+
+        try {
+          const response = await utils.fetchWithRetry(
+            `${CONFIG.API_BASE}/users`
+          );
+          const data = await response.json();
+
+          if (response.ok) {
+            const totalUsersElement = document.getElementById("totalUsers");
+            const lastUpdatedElement = document.getElementById("lastUpdated");
+
+            if (totalUsersElement) {
+              totalUsersElement.textContent = data.totalUsers || 0;
+            }
+
+            if (lastUpdatedElement) {
+              lastUpdatedElement.textContent = new Date().toLocaleString();
+            }
+
+            state.lastStatsUpdate = Date.now();
+            state.retryCount = 0;
+          }
+        } catch (error) {
+          console.error("Error loading stats:", error);
+          state.retryCount++;
+
+          // Exponential backoff for retries
+          if (state.retryCount < CONFIG.MAX_RETRIES) {
+            setTimeout(loadStats, Math.pow(2, state.retryCount) * 1000);
+          }
+        } finally {
+          state.isLoading = false;
+        }
+      }
+
+      // Mobile stats management
+      function toggleStats() {
+        const statsContent = document.getElementById("statsContent");
+        const toggleBtn = document.getElementById("statsToggle");
+
+        if (!statsContent || !toggleBtn) return;
+
+        const isHidden = statsContent.classList.contains("hidden");
+
+        if (isHidden) {
+          statsContent.classList.remove("hidden");
+          toggleBtn.textContent = "📱";
+          toggleBtn.setAttribute("aria-expanded", "true");
+          localStorage.setItem("statsVisible", "true");
+        } else {
+          statsContent.classList.add("hidden");
+          toggleBtn.textContent = "📊";
+          toggleBtn.setAttribute("aria-expanded", "false");
+          localStorage.setItem("statsVisible", "false");
+        }
+      }
+
+      function initMobileStats() {
+        const statsVisible = localStorage.getItem("statsVisible");
+        const statsContent = document.getElementById("statsContent");
+        const toggleBtn = document.getElementById("statsToggle");
+
+        if (!statsContent || !toggleBtn) return;
+
+        if (window.innerWidth <= CONFIG.MOBILE_BREAKPOINT) {
+          if (statsVisible === "false") {
+            statsContent.classList.add("hidden");
+            toggleBtn.textContent = "📊";
+            toggleBtn.setAttribute("aria-expanded", "false");
+          } else {
+            statsContent.classList.remove("hidden");
+            toggleBtn.textContent = "📱";
+            toggleBtn.setAttribute("aria-expanded", "true");
+          }
+        } else {
+          statsContent.classList.remove("hidden");
+          toggleBtn.textContent = "📱";
+          toggleBtn.setAttribute("aria-expanded", "true");
+        }
+      }
+
+      // Event handlers
+      function handleWindowResize() {
+        const statsContent = document.getElementById("statsContent");
+        const toggleBtn = document.getElementById("statsToggle");
+
+        if (!statsContent || !toggleBtn) return;
+
+        if (window.innerWidth > CONFIG.MOBILE_BREAKPOINT) {
+          statsContent.classList.remove("hidden");
+          toggleBtn.textContent = "📱";
+          toggleBtn.setAttribute("aria-expanded", "true");
+        } else {
+          initMobileStats();
+        }
+      }
+
+      function handleVisibilityChange() {
+        if (!document.hidden && state.lastStatsUpdate) {
+          const timeSinceLastUpdate = Date.now() - state.lastStatsUpdate;
+          if (timeSinceLastUpdate > CONFIG.STATS_REFRESH_INTERVAL) {
+            loadStats();
+          }
+        }
+      }
+
+      // Global error handler
+      window.addEventListener("error", (event) => {
+        console.error("Global error:", event.error);
+        // Could implement error reporting here
+      });
+
+      window.addEventListener("unhandledrejection", (event) => {
+        console.error("Unhandled promise rejection:", event.reason);
+        event.preventDefault();
+      });
+    </script>
+  </body>
+</html>
