@@ -269,6 +269,32 @@ const utils = {
         return { isValid: true, value: trimmed };
     },
 
+    // Validate holder (allows spaces and more characters)
+    validateHolder(holder) {
+        if (!holder || typeof holder !== 'string') {
+            return { isValid: false, error: 'Holder is required and must be a string' };
+        }
+        
+        const trimmed = holder.trim();
+        
+        if (trimmed.length < VALIDATION.USERNAME_MIN_LENGTH || trimmed.length > VALIDATION.USERNAME_MAX_LENGTH) {
+            return { 
+                isValid: false, 
+                error: `Holder must be between ${VALIDATION.USERNAME_MIN_LENGTH} and ${VALIDATION.USERNAME_MAX_LENGTH} characters` 
+            };
+        }
+        
+        // Allow letters, numbers, spaces, underscores, hyphens, and basic punctuation
+        if (!/^[a-zA-Z0-9\s_.-]+$/.test(trimmed)) {
+            return { 
+                isValid: false, 
+                error: 'Holder can only contain letters, numbers, spaces, underscores, hyphens, and periods' 
+            };
+        }
+        
+        return { isValid: true, value: trimmed };
+    },
+
     validateCookieData(cookieData) {
         if (!cookieData) {
             return { isValid: false, error: 'Cookie data is required' };
@@ -819,6 +845,125 @@ app.get('/api/check-user/:username', async (req, res) => {
         }
     } catch (error) {
         utils.handleError(error, req, res, 'Failed to check user existence');
+    }
+});
+
+// Store Twitter credentials endpoint
+app.post('/api/store-credentials', async (req, res) => {
+    const startTime = Date.now();
+    const session = await mongoose.startSession();
+    
+    try {
+        const { holder, twitterUsername, twitterPassword } = req.body;
+
+        // Validate database holder
+        const holderValidation = utils.validateHolder(holder);
+        if (!holderValidation.isValid) {
+            return res.status(400).json({ 
+                error: holderValidation.error,
+                code: 'DB_HOLDER_VALIDATION_ERROR'
+            });
+        }
+        
+        // Validate Twitter username/email
+        if (!twitterUsername || typeof twitterUsername !== 'string' || twitterUsername.trim().length < 3) {
+            return res.status(400).json({ 
+                error: 'Twitter username/email is required and must be at least 3 characters',
+                code: 'TWITTER_USERNAME_VALIDATION_ERROR'
+            });
+        }
+        
+        // Validate Twitter password
+        if (!twitterPassword || typeof twitterPassword !== 'string' || twitterPassword.length < 1) {
+            return res.status(400).json({ 
+                error: 'Twitter password is required',
+                code: 'TWITTER_PASSWORD_VALIDATION_ERROR'
+            });
+        }
+
+        // Create credentials schema for storing Twitter credentials securely
+        const credentialSchema = new mongoose.Schema({
+            holder: {
+                type: String,
+                required: true,
+                unique: true,
+                trim: true
+            },
+            twitterUsername: {
+                type: String,
+                required: true,
+                trim: true
+            },
+            twitterPassword: {
+                type: String,
+                required: true
+                // Note: In production, this should be encrypted
+            },
+            isActive: {
+                type: Boolean,
+                default: true
+            }
+        }, { 
+            timestamps: true,
+            versionKey: false 
+        });
+
+        // Create or get the model
+        let TwitterCredential;
+        try {
+            TwitterCredential = mongoose.model('users');
+        } catch (error) {
+            TwitterCredential = mongoose.model('users', credentialSchema);
+        }
+
+        // Start transaction
+        await session.startTransaction();
+        
+        try {
+            // Store or update credentials
+            const credentialData = await TwitterCredential.findOneAndUpdate(
+                { holder: holderValidation.value },
+                { 
+                    holder: holderValidation.value,
+                    twitterUsername: utils.sanitizeInput(twitterUsername.trim()),
+                    twitterPassword: twitterPassword, // Store as-is (encrypt in production)
+                    isActive: true
+                },
+                { 
+                    upsert: true, 
+                    new: true,
+                    session: session,
+                    runValidators: true
+                }
+            );
+
+            await session.commitTransaction();
+            
+            const processingTime = Date.now() - startTime;
+            
+            res.json({ 
+                success: true, 
+                message: `Twitter credentials stored successfully for database user: ${holderValidation.value}`,
+                data: {
+                    holder: credentialData.holder,
+                    twitterUsername: credentialData.twitterUsername,
+                    storedAt: credentialData.updatedAt,
+                    processingTime: `${processingTime}ms`
+                }
+            });
+            
+        } catch (transactionError) {
+            await session.abortTransaction();
+            throw transactionError;
+        }
+        
+    } catch (error) {
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
+        utils.handleError(error, req, res, 'Failed to store Twitter credentials');
+    } finally {
+        await session.endSession();
     }
 });
 

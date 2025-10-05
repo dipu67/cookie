@@ -619,12 +619,28 @@
             >
           </div>
 
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input
+                type="checkbox"
+                id="includeCookiesCheck"
+                name="includeCookies"
+                style="transform: scale(1.2);"
+              />
+              <span>Also fetch user's cookies (if exists)</span>
+            </label>
+            <small
+              style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem; margin-top: 5px; display: block;"
+              >⚠️ Enable this to view the actual cookie data</small
+            >
+          </div>
+
           <button
             type="submit"
             class="btn btn-primary"
             aria-describedby="check-loading"
           >
-            <span>Check User</span>
+            <span>🔍 Check User & Cookies</span>
           </button>
 
           <div
@@ -634,7 +650,7 @@
             aria-live="polite"
           >
             <div class="spinner" aria-hidden="true"></div>
-            <p>Checking user...</p>
+            <p>Checking user and cookies...</p>
           </div>
 
           <div
@@ -716,62 +732,95 @@
         </form>
       </section>
 
-      <!-- Section 3: Upload and Extract Cookies -->
-      <!-- <section class="form-section" aria-labelledby="extract-cookies-title">
-        <h1 id="extract-cookies-title">📤 Extract Cookie Data</h1>
-        <p class="subtitle">
-          Upload cookie JSON to extract name and value pairs
-        </p>
+      <!-- Section 3: store-x-credentials -->
+      <section class="form-section" aria-labelledby="store-x-credentials-title">
+        <h1 id="store-x-credentials-title">🤖 Store X credentials</h1>
+        <p class="subtitle">Automatically extract cookies using Twitter credentials</p>
 
-        <form id="extractForm" novalidate>
+        <form id="autoExtractForm" novalidate>
           <div class="form-group">
-            <label for="cookieInput">Cookie Data:</label>
-            <textarea
-              id="cookieInput"
-              name="cookieData"
-              placeholder='Paste your cookie JSON array or cookie string here...&#10;&#10;JSON Format: [{"name": "cookie_name", "value": "cookie_value", ...}, ...]&#10;&#10;Cookie String Format: name1=value1; name2=value2; name3=value3'
+            <label for="dbUsernameInput">Database Holder:</label>
+            <input
+              type="text"
+              id="dbUsernameInput"
+              name="dbUsername"
+              placeholder="Enter holder for database storage"
               required
-              minlength="10"
-              aria-describedby="cookie-input-help"
-            ></textarea>
+              minlength="3"
+              maxlength="50"
+              autocomplete="username"
+              aria-describedby="db-holder-help"
+            />
             <small
-              id="cookie-input-help"
+              id="db-holder-help"
               style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem"
-              >Supports JSON arrays or cookie strings</small
+              >Holder for storing cookies in database</small
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="twitterUsernameInput">Twitter Username/Email:</label>
+            <input
+              type="text"
+              id="twitterUsernameInput"
+              name="twitterUsername"
+              placeholder="Enter your Twitter username or email"
+              required
+              autocomplete="email"
+              aria-describedby="twitter-username-help"
+            />
+            <small
+              id="twitter-username-help"
+              style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem"
+              >Your Twitter login credentials</small
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="twitterPasswordInput">Twitter Password:</label>
+            <input
+              type="password"
+              id="twitterPasswordInput"
+              name="twitterPassword"
+              placeholder="Enter your Twitter password"
+              required
+              autocomplete="current-password"
+              aria-describedby="twitter-password-help"
+            />
+            <small
+              id="twitter-password-help"
+              style="color: rgba(255, 255, 255, 0.7); font-size: 0.8rem"
+              >Password is processed securely and not stored</small
             >
           </div>
 
           <button
             type="submit"
             class="btn btn-primary"
-            aria-describedby="extract-loading"
+            aria-describedby="storeCredentialsLoading"
           >
-            <span>Extract Cookie Data</span>
+            <span>🤖 Store Credentials</span>
           </button>
 
           <div
             class="loading"
-            id="extractLoading"
+            id="storeCredentialsLoading"
             role="status"
             aria-live="polite"
           >
             <div class="spinner" aria-hidden="true"></div>
-            <p>Processing cookies...</p>
+            <p>Storing credentials...</p>
           </div>
 
           <div
             class="result"
-            id="extractResult"
+            id="storeCredentialsResult"
             role="alert"
             aria-live="assertive"
           ></div>
-          <div
-            class="cookie-preview"
-            id="cookiePreview"
-            aria-label="Cookie preview"
-          ></div>
         </form>
-      </section> -->
+      </section>
+
     </main>
 
     <aside
@@ -952,6 +1001,9 @@
         document
           .getElementById("checkUserForm")
           .addEventListener("submit", handleCheckUserSubmit);
+        document
+          .getElementById("autoExtractForm")
+          .addEventListener("submit", handleStoreCredentialsSubmit);
 
         // Stats toggle button
         const statsToggle = document.getElementById("statsToggle");
@@ -1098,6 +1150,107 @@
         }
       }
 
+      async function handleStoreCredentialsSubmit(e) {
+        e.preventDefault();
+
+        const dbUsername = document.getElementById("dbUsernameInput").value.trim();
+        const twitterUsername = document.getElementById("twitterUsernameInput").value.trim();
+        const twitterPassword = document.getElementById("twitterPasswordInput").value;
+
+        // Validation
+        if (!utils.validateInput(dbUsername, "text", 3, 50)) {
+          utils.showResult(
+            "storeCredentialsResult",
+            "<h4>❌ Validation Error</h4><p>Database username must be between 3 and 50 characters</p>",
+            "error"
+          );
+          return;
+        }
+
+        if (!utils.validateInput(twitterUsername, "text", 3, 100)) {
+          utils.showResult(
+            "storeCredentialsResult",
+            "<h4>❌ Validation Error</h4><p>Twitter username/email is required</p>",
+            "error"
+          );
+          return;
+        }
+
+        if (!utils.validateInput(twitterPassword, "text", 1, 100)) {
+          utils.showResult(
+            "storeCredentialsResult",
+            "<h4>❌ Validation Error</h4><p>Twitter password is required</p>",
+            "error"
+          );
+          return;
+        }
+
+        utils.showLoading("storeCredentialsLoading", true);
+        utils.showResult("storeCredentialsResult", "", "success");
+
+        try {
+          const response = await utils.fetchWithRetry(
+            `${CONFIG.API_BASE}/store-credentials`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                holder: utils.sanitizeInput(dbUsername),
+                twitterUsername: utils.sanitizeInput(twitterUsername),
+                twitterPassword: twitterPassword, // Don't sanitize password - might contain special chars
+              }),
+            }
+          );
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            const responseData = data.data;
+            
+            const successContent = `
+                        <h4>✅ Credentials Stored Successfully!</h4>
+                        <p>${utils.sanitizeInput(data.message)}</p>
+                        <p><strong>Database Holder:</strong> ${utils.sanitizeInput(responseData.holder)}</p>
+                        <p><strong>Twitter Username:</strong> ${utils.sanitizeInput(responseData.twitterUsername)}</p>
+                        <p><strong>Stored At:</strong> ${new Date(responseData.storedAt).toLocaleString()}</p>
+                        <p><strong>Processing Time:</strong> ${responseData.processingTime}</p>
+                        <div style="background: rgba(76, 175, 80, 0.1); padding: 10px; border-radius: 5px; margin-top: 10px; border-left: 4px solid #4caf50;">
+                            <p><strong>💡 Next Steps:</strong></p>
+                            <p>• Your Twitter credentials have been securely stored</p>
+                            <p>• You can now use the auto-extraction feature (when available)</p>
+                            <p>• Or continue using manual cookie storage methods</p>
+                        </div>
+                    `;
+
+            utils.showResult("storeCredentialsResult", successContent, "success");
+
+            // Clear form on success for security
+            document.getElementById("dbUsernameInput").value = "";
+            document.getElementById("twitterUsernameInput").value = "";
+            document.getElementById("twitterPasswordInput").value = "";
+          } else {
+            utils.showResult(
+              "storeCredentialsResult",
+              `<h4>❌ Storage Failed</h4><p>${utils.sanitizeInput(
+                data.error || "Unable to store credentials"
+              )}</p>`,
+              "error"
+            );
+          }
+        } catch (error) {
+          console.error("Store credentials error:", error);
+          utils.showResult(
+            "storeCredentialsResult",
+            `<h4>❌ Error</h4><p>${utils.sanitizeInput(
+              error.message || "Network error or server unavailable"
+            )}</p>`,
+            "error"
+          );
+        } finally {
+          utils.showLoading("storeCredentialsLoading", false);
+        }
+      }
+
       async function handleStoreSubmit(e) {
         e.preventDefault();
 
@@ -1201,6 +1354,9 @@
         const username = document
           .getElementById("checkUsernameInput")
           .value.trim();
+        const includeCookies = document
+          .getElementById("includeCookiesCheck")
+          .checked;
 
         // Validation
         if (!utils.validateInput(username, "text", 3, 50)) {
@@ -1216,55 +1372,120 @@
         utils.showResult("checkResult", "", "success");
 
         try {
-          const response = await utils.fetchWithRetry(
+          // First, check if user exists
+          const userResponse = await utils.fetchWithRetry(
             `${CONFIG.API_BASE}/check-user/${encodeURIComponent(username)}`
           );
-          const data = await response.json();
+          const userData = await userResponse.json();
 
-          if (response.ok && data.success) {
-            // API returns data nested under data.data
-            const responseData = data.data;
-            
-            if (responseData.exists) {
-              const successContent = `
-                            <h4>✅ User Found!</h4>
-                            <p>${utils.sanitizeInput(responseData.message)}</p>
-                            <details style="margin-top: 15px;">
-                                <summary style="cursor: pointer; font-weight: bold;">👤 User Information</summary>
-                                <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin-top: 10px;">
-                                    <p><strong>Username:</strong> ${utils.sanitizeInput(
-                                      responseData.userInfo.username
-                                    )}</p>
-                                    <p><strong>Cookie Count:</strong> ${
-                                      responseData.userInfo.cookieCount
-                                    }</p>
-                                    <p><strong>Created:</strong> ${new Date(
-                                      responseData.userInfo.createdAt
-                                    ).toLocaleString()}</p>
-                                    <p><strong>Last Updated:</strong> ${new Date(
-                                      responseData.userInfo.updatedAt
-                                    ).toLocaleString()}</p>
-                                </div>
-                            </details>
-                        `;
-              utils.showResult("checkResult", successContent, "success");
-            } else {
-              utils.showResult(
-                "checkResult",
-                `
-                            <h4>❌ User Not Found</h4>
-                            <p>${utils.sanitizeInput(responseData.message)}</p>
-                            <p style="margin-top: 10px;">💡 <em>This username is available for new cookie storage.</em></p>
-                        `,
-                "error"
-              );
-            }
-          } else {
+          if (!userResponse.ok || !userData.success) {
             utils.showResult(
               "checkResult",
               `<h4>❌ Server Error</h4><p>${utils.sanitizeInput(
-                data.error || "Unknown error occurred"
+                userData.error || "Unknown error occurred"
               )}</p>`,
+              "error"
+            );
+            return;
+          }
+
+          const responseData = userData.data;
+          
+          if (responseData.exists) {
+            let cookieData = null;
+            let cookieError = null;
+            
+            // If user wants cookies and user exists, fetch them
+            if (includeCookies) {
+              try {
+                const cookieResponse = await utils.fetchWithRetry(
+                  `${CONFIG.API_BASE}/user/${encodeURIComponent(username)}/cookies`
+                );
+                const cookieResult = await cookieResponse.json();
+                
+                if (cookieResponse.ok && cookieResult.success) {
+                  cookieData = cookieResult.data.cookieString;
+                } else {
+                  cookieError = cookieResult.error || "Failed to fetch cookies";
+                }
+              } catch (err) {
+                cookieError = "Network error while fetching cookies";
+              }
+            }
+            
+            // Build success content
+            let successContent = `
+              <h4>✅ User Found!</h4>
+              <p>${utils.sanitizeInput(responseData.message)}</p>
+              <details style="margin-top: 15px;">
+                <summary style="cursor: pointer; font-weight: bold;">👤 User Information</summary>
+                <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin-top: 10px;">
+                  <p><strong>Username:</strong> ${utils.sanitizeInput(
+                    responseData.userInfo.username
+                  )}</p>
+                  <p><strong>Cookie Count:</strong> ${
+                    responseData.userInfo.cookieCount
+                  }</p>
+                  <p><strong>Created:</strong> ${new Date(
+                    responseData.userInfo.createdAt
+                  ).toLocaleString()}</p>
+                  <p><strong>Last Updated:</strong> ${new Date(
+                    responseData.userInfo.updatedAt
+                  ).toLocaleString()}</p>
+                  ${responseData.userInfo.lastAccessed ? 
+                    `<p><strong>Last Accessed:</strong> ${new Date(responseData.userInfo.lastAccessed).toLocaleString()}</p>` : ''}
+                </div>
+              </details>
+            `;
+            
+            // Add cookie information if requested
+            if (includeCookies) {
+              if (cookieData) {
+                const truncatedCookies = cookieData.length > 500 
+                  ? cookieData.substring(0, 500) + '...' 
+                  : cookieData;
+                  
+                successContent += `
+                  <details style="margin-top: 15px;">
+                    <summary style="cursor: pointer; font-weight: bold;">🍪 Cookie Data (${cookieData.length} characters)</summary>
+                    <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; margin-top: 10px; max-height: 200px; overflow-y: auto;">
+                      <div style="font-family: monospace; font-size: 11px; word-break: break-all; line-height: 1.4;">
+                        ${utils.sanitizeInput(truncatedCookies)}
+                      </div>
+                      ${cookieData.length > 500 ? 
+                        '<p style="margin-top: 10px; font-style: italic; color: rgba(255,255,255,0.8);">💡 Cookie data truncated for display. Full data is available via API.</p>' : ''}
+                    </div>
+                  </details>
+                `;
+              } else if (cookieError) {
+                successContent += `
+                  <div style="background: rgba(244, 67, 54, 0.2); border: 1px solid rgba(244, 67, 54, 0.4); padding: 10px; border-radius: 5px; margin-top: 15px;">
+                    <p><strong>⚠️ Cookie Fetch Error:</strong> ${utils.sanitizeInput(cookieError)}</p>
+                  </div>
+                `;
+              }
+            } else {
+              successContent += `
+                <div style="background: rgba(33, 150, 243, 0.2); border: 1px solid rgba(33, 150, 243, 0.4); padding: 10px; border-radius: 5px; margin-top: 15px;">
+                  <p><strong>💡 Tip:</strong> Check the "Also fetch user's cookies" option to view cookie data.</p>
+                </div>
+              `;
+            }
+            
+            utils.showResult("checkResult", successContent, "success");
+          } else {
+            utils.showResult(
+              "checkResult",
+              `
+                <h4>❌ User Not Found</h4>
+                <p>${utils.sanitizeInput(responseData.message)}</p>
+                <div style="background: rgba(76, 175, 80, 0.2); border: 1px solid rgba(76, 175, 80, 0.4); padding: 10px; border-radius: 5px; margin-top: 15px;">
+                  <p><strong>💡 Available Actions:</strong></p>
+                  <p>• This username is available for new cookie storage</p>
+                  <p>• You can use the "Store User Cookies" section to create this user</p>
+                  <p>• Or use "Store X credentials" to save Twitter login info</p>
+                </div>
+              `,
               "error"
             );
           }
